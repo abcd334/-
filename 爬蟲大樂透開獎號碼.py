@@ -5,28 +5,38 @@ import openpyxl
 
 wb = openpyxl.load_workbook('C:\\Users\Arlen\Desktop\GitHub\win-the-lottery\大樂透開獎號碼-新版.xlsx')
 ws = wb['工作表1']
-k=2
-date_format = "%y/%m/%d"
-for draw_year in range(103,113):
-    for i in range(1,120):
-        driver = webdriver.Chrome("./goolemapSpider/chromedriver.exe")
-        driver.get('https://www.taiwanlottery.com.tw/lotto/Lotto649/history.aspx')
+k = ws.max_row
 
-        time.sleep(1.5)
-        flag=driver.find_element("name",'Lotto649Control_history$txtNO')
+draw_number=ws.cell(k, 1).value
+last_row_year=int(str(draw_number)[:3])
+last_row_number=int(str(draw_number)[-3:])
+
+driver = webdriver.Chrome("./goolemapSpider/chromedriver.exe")
+driver.get('https://www.taiwanlottery.com.tw/lotto/Lotto649/history.aspx')
+time.sleep(1)
+date_format = "%y/%m/%d"
+for draw_year in range(int(last_row_year),113):
+
+    for i in range(int(last_row_number),120):
+
+
+        flag = driver.find_element("name", 'Lotto649Control_history$txtNO')
         draw_number="000000" + str(i)
+        flag.clear()
+        time.sleep(0.7)
 
         '網業執行查詢'
         flag.send_keys(str(draw_year) + draw_number[-6:])
-        time.sleep(1)
+        time.sleep(0.7)
         driver.find_element("id",'Lotto649Control_history_btnSubmit').click()
-        time.sleep(1.5)
+        time.sleep(1)
 
         '判斷是否有內容'
         soup = BeautifulSoup(driver.page_source, "lxml")
         check=soup.find("span", {"id": "Lotto649Control_history_Label1"}).text
 
         if check=="查無資料":
+            last_row_number=1
             break
         else:
             DrawTerm=soup.find("span", {"id": "Lotto649Control_history_dlQuery_L649_DrawTerm_0"}).text
@@ -86,6 +96,8 @@ for draw_year in range(103,113):
             ws.cell(k,30,int(categC_2.replace(",", "")))
             ws.cell(k,31,int(label2_2.replace(",", "")))
 
+            print(DrawTerm,k)
+
             k += 1
             wb.save('大樂透開獎號碼-新版.xlsx')
-            print(DrawTerm)
+
